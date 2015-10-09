@@ -11,11 +11,11 @@ RUN echo "deb http://package.perforce.com/apt/ubuntu trusty release" > /etc/apt/
 RUN apt-get update && DEBIAN_FRONTEND="noninteractive" apt-get install -y perforce-server
 RUN mkdir -p /p4/1
 VOLUME /p4
-RUN /opt/perforce/sbin/configure-perforce-server.sh main -n -p 1666 -r /p4/1 -u perforce -P Password --unicode --case 1
+# RUN /opt/perforce/sbin/configure-perforce-server.sh main -n -p 1666 -r /p4/1 -u perforce -P Password --unicode --case 1
 
 EXPOSE 1666
 
-CMD ["/usr/bin/p4dctl", "start", "main"]
+CMD ["/opt/perforce/sbin/p4d", "-r/p4/1", "-p1666"]
 
 
 # ENV CONTEXT_PATH ROOT
