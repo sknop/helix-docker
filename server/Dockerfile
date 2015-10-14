@@ -7,12 +7,13 @@ MAINTAINER Sven Erik Knop <sknop@perforce.com>
 
 RUN apt-get update && apt-get install -y perforce-server
 
-# Volumes for server roots and triggers
-VOLUME /p4
+ENV P4PORT 1666
+ENV P4ROOT /p4
 
-ENV P4PORT 1666 
+EXPOSE ${P4PORT}
 
-EXPOSE 1666
+# Volumes for server root
+VOLUME ${P4ROOT}
 
 COPY run.sh /
 CMD ["/run.sh"]

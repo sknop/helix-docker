@@ -1,10 +1,21 @@
 #!/bin/bash
 set -e
 
-P4PORT=${P4PORT:-1666}
+# P4PORT provided via environment
+# P4ROOT provided via environment
+
+if [ -z $P4PORT ]; then
+    echo "P4PORT must be defined"
+    exit 1
+fi
+
+if [ -z $P4ROOT ]; then
+    echo "P4ROOT must be defined"
+    exit 1
+fi
+
 P4USER=${P4USER:-p4admin}
 P4PASSWD=${P4PASSWD:-Password}
-P4ROOT=/p4
 P4LOG=log
 
 # set up directories
