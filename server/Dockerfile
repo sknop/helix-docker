@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y perforce-server
 
 ENV P4PORT 1666
 ENV P4ROOT /p4
+ENV P4LOG log
 
 EXPOSE ${P4PORT}
 

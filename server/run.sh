@@ -14,9 +14,13 @@ if [ -z $P4ROOT ]; then
     exit 1
 fi
 
+if [ -z $P4LOG ]; then
+    echo "P4LOG must be defined"
+    exit 1
+fi
+
 P4USER=${P4USER:-p4admin}
 P4PASSWD=${P4PASSWD:-Password}
-P4LOG=log
 
 # set up directories
 
