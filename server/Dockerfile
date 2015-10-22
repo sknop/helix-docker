@@ -23,4 +23,5 @@ VOLUME ${P4ROOT}
 USER perforce
 
 COPY run.sh /
+COPY SetupHelix.py /
 CMD ["/run.sh"]
