@@ -21,9 +21,11 @@ function check_environment {
     fi
 }
 
+CLIENT=/opt/perforce/client
+
 function create_config {
-    mkdir -p /client
-    cat >> /client/.p4 <<!
+    mkdir -p ${CLIENT}
+    cat >> ${CLIENT}/.p4 <<!
 P4PORT=rsh:/opt/perforce/sbin/p4d -r $P4ROOT -i -L P4LOG
 P4USER=$P4USER
 P4CLIENT=setup.client
@@ -31,7 +33,7 @@ P4CLIENT=setup.client
 }
 
 function setup_server {
-    cd /client
+    cd ${CLIENT}
     p4 user -f -o | p4 user -i
     p4 client -o  | p4 client -i
 
