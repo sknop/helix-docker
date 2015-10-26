@@ -9,6 +9,8 @@ import os
 import errno
 import sys
 import shutil
+import re
+from collections import OrderedDict
 
 import DockerHelper
 
@@ -93,12 +95,28 @@ class SetupSwarm:
             p4.save_protect(protections)
 
     def create_triggers(self, p4):
-        # ensure .swarm depot exists
+        """Create and submit the triggers for P4"""
+
+        self.ensure_depot(p4)
+
+        client_name = "tmp_swarm_setup"
+
+        client_root = self.create_client(p4, client_name )
+
+        self.submit_triggers(p4, client_root)
+
+        self.delete_client(p4, client_name)
+
+        self.create_trigger_entries(p4)
+
+    def ensure_depot(self, p4):
+        """ensure .swarm depot exists"""
         depotspec = p4.fetch_depot('.swarm')
         p4.save_depot(depotspec)
 
-        # create a temporary client
-        client_name = "tmp_swarm_setup"
+    def create_client(self, p4, client_name):
+        """create a temporary client"""
+
         clientspec = p4.fetch_client(client_name)
         clientspec._root = '/tmp/' + client_name
         clientspec._host = ""
@@ -111,17 +129,23 @@ class SetupSwarm:
         p4.cwd = clientspec._root
         p4.client = client_name
 
-        # copy the files into the correct location
-        trigger_file = "/opt/perforce/swarm-triggers/bin/swarm-trigger.pl"
+        return clientspec._root
+
+    def submit_triggers(self, p4, client_root):
+        """Copy the files into the correct location and submits them"""
+        trigger_name = "swarm-trigger.pl"
+        conf_name = "swarm-trigger.conf"
+        trigger_file = "/opt/perforce/swarm-triggers/bin/{}".format(trigger_name)
+
         if os.path.isfile(trigger_file):
             # copy the file
-            shutil.copy(trigger_file, clientspec._root)
+            shutil.copy(trigger_file, client_root)
 
         else:
             print("Swarm-triggers not installed successfully, bugging out")
             sys.exit(1)
 
-        config_file = os.path.join(clientspec._root, "swarm-trigger.conf")
+        config_file = os.path.join(client_root, conf_name)
 
         with open(config_file, 'w') as f:
             print('SWARM_HOST="http://{}"'.format(self.swarm_host), file=f)
@@ -129,9 +153,48 @@ class SetupSwarm:
             print('ADMIN_USER=', file=f)
             print('ADMIN_TICKET_FILE=', file=f)
 
-        p4.run_add('swarm-trigger.pl')
-        p4.run_add('swarm-trigger.conf')
+        result = p4.run_sync("-k", exception_level = 1)
+
+        if result:
+            p4.run_edit(trigger_name)
+            p4.run_edit(conf_name)
+        else:
+            p4.run_add(trigger_name)
+            p4.run_add(conf_name)
+
         p4.run_submit('-d', 'Swarm trigger and configuration added')
+
+    def delete_client(self, p4, client_name):
+        p4.delete_client(client_name)
+
+    def create_trigger_entries(self, p4):
+        """Updates the trigger table with the correct triggers"""
+        triggers = OrderedDict()
+        triggers['swarm.job'] = 'form-commit   job    "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t job        -v %formname%"'
+        triggers['swarm.user'] = 'form-commit   user   "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t user       -v %formname%"'
+        triggers['swarm.userdel'] = 'form-delete   user   "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t userdel    -v %formname%"'
+        triggers['swarm.group'] = 'form-commit   group  "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t group      -v %formname%"'
+        triggers['swarm.groupdel'] = 'form-delete   group  "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t groupdel   -v %formname%"'
+        triggers['swarm.changesave'] = 'form-save     change "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t changesave -v %formname%"'
+        triggers['swarm.shelve'] = 'shelve-commit //...  "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t shelve     -v %change%"'
+        triggers['swarm.commit'] = 'change-commit //...  "%//.swarm/triggers/swarm-trigger.pl% -c %//.swarm/triggers/swarm-trigger.conf% -t commit     -v %change%"'
+
+        trigger_spec = p4.fetch_triggers()
+        existing_triggers = OrderedDict()
+        if 'Triggers' in trigger_spec:
+            for entry in trigger_spec._triggers:
+                k,v = re.split('\s+', entry, 1)
+                existing_triggers[k] = v
+
+        for k,v in triggers.items():
+            existing_triggers[k] = v
+
+        new_table = []
+        for k,v in existing_triggers.items():
+            new_table.append("{}\t{}".format(k,v))
+
+        trigger_spec._triggers = new_table
+        p4.save_triggers(trigger_spec)
 
 def mkdir_p(path):
     try:
