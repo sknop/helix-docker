@@ -29,7 +29,7 @@ P4PASSWD=${P4PASSWD:-Password}
 if [ -f $P4ROOT/db.rev ]; then
     echo "$P4ROOT/db.rev already exists, bugging out of here"
 else 
-    python2.7 /SetupHelix.py -p "rsh:/opt/perforce/sbin/p4d -r $P4ROOT -i -L P4LOG" -u $P4USER -P $P4PASSWD
+    python2.7 /SetupHelix.py -p "rsh:/opt/perforce/sbin/p4d -r ${P4ROOT} -i -L ${P4LOG}" -u ${P4USER} -P ${P4PASSWD}
 fi
 
 # start server

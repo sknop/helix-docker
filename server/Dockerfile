@@ -15,6 +15,7 @@ EXPOSE ${P4PORT}
 
 RUN mkdir -p ${P4ROOT}
 RUN chown perforce:perforce ${P4ROOT}
+RUN usermod -u 1000 perforce
 
 # Volumes for server root
 
