@@ -1,2 +1,5 @@
 client
-
+.idea
+*.iml
+*.ipr
+*.iws
