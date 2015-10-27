@@ -10,6 +10,7 @@ import errno
 import sys
 import shutil
 import re
+import subprocess
 from collections import OrderedDict
 
 import DockerHelper
@@ -28,6 +29,8 @@ class SetupSwarm:
 
         self.create_token()
         self.setup_helix(port, user, password)
+        self.configure_swarm(port)
+        self.stop_and_start_swarm()
 
     def create_token(self):
         """Create the token"""
@@ -108,6 +111,22 @@ class SetupSwarm:
         self.delete_client(p4, client_name)
 
         self.create_trigger_entries(p4)
+
+    def configure_swarm(self, port):
+        config_file = "/opt/perforce/swarm/sbin/configure-swarm.sh"
+        cmd = [config_file,
+               "-p", port,
+               "-u", self.swarmuser,
+               "-w", self.swarmpass,
+               "-e", "blast.perforce.co.uk",
+               "-H", self.swarm_host]
+
+        result = subprocess.check_output(cmd, shell=True)
+        print(result) # this will be a lot of stuff, remove when verified and debugged
+
+    def stop_and_start_swarm(self):
+        stop_result = subprocess.check_output(["/usr/sbin/apachectl","stop"])
+        subprocess.call(["/usr/sbin/apachectl","-D", "FOREGROUND"])
 
     def ensure_depot(self, p4):
         """ensure .swarm depot exists"""
