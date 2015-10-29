@@ -36,6 +36,12 @@ def docker_real_name():
 
         # if there is none we are down the deep end anyway
         if len(candidates) == 0:
+            # it is possible that someone used docker -h
+            possibles = [ x[1] for x in host_entries
+                           if x[0] == ip and not x[1].endswith(".bridge")]
+            if len(possibles) > 1:
+                return possibles[1]
+
             print("No candidate found in /etc/hosts: {}".format(host_entries))
             print("Bugging out for safety reasons")
             sys.exit(1)

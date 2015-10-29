@@ -121,8 +121,19 @@ class SetupSwarm:
                "-e", "blast.perforce.co.uk",
                "-H", self.swarm_host]
 
-        result = subprocess.check_output(cmd, shell=True)
+        command = " ".join(cmd)
+        p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        (out,err) = (p.stdout, p.stderr)
+
+        result = out.read()
+        errors = err.read()
+
         print(result) # this will be a lot of stuff, remove when verified and debugged
+        if errors:
+            print(errors, file=sys.stderr)
+
+        out.close()
+        err.close()
 
     def stop_and_start_swarm(self):
         stop_result = subprocess.check_output(["/usr/sbin/apachectl","stop"])

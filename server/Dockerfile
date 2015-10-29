@@ -22,6 +22,7 @@ RUN usermod -u 1000 perforce
 VOLUME ${P4ROOT}
 
 USER perforce
+EXPOSE 80
 
 COPY run.sh /
 COPY SetupHelix.py /
