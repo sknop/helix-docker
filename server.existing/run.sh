@@ -26,12 +26,12 @@ check_environment
 P4USER=${P4USER:-p4admin}
 P4PASSWD=${P4PASSWD:-Password}
 
-if [ -f $P4ROOT/db.rev ]; then
-    echo "$P4ROOT/db.rev already exists, bugging out of here"
-else 
-    python2.7 /SetupHelix.py -p "rsh:/opt/perforce/sbin/p4d -r ${P4ROOT} -i -L ${P4LOG}" -u ${P4USER} -P ${P4PASSWD}
+if [ ! -f $P4ROOT/db.rev ]; then
+    echo "Server does not exist. Please specify volume with existing server files"
+    echo "or use sknop/perforce-server-new image."
+    exit 1
 fi
 
-# start server
+# start server.existing
 
 p4d -r $P4ROOT -L $P4LOG -p $P4PORT

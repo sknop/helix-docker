@@ -14,5 +14,7 @@ RUN apt-get update && \
 
 COPY SetupSwarm.py /
 
+EXPOSE 80
+
 ENTRYPOINT ["/SetupSwarm.py"]
 CMD ["-h"]
