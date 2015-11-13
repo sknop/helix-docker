@@ -1,5 +1,5 @@
 FROM ubuntu:14.04
-MAINTAINER Sven Erik Knop <george@mux.ro>
+MAINTAINER Sven Erik Knop <sknop@perforce.com>
 
 ENV DEBIAN_FRONTEND noninteractive
 
